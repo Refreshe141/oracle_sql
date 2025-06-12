@@ -213,6 +213,222 @@
    #상호관련 서브 쿼리는 메인 쿼리에서 처리되는 각 행에 대해 한 번씩 평가
    #상호관련 서브쿼리는 메인 쿼리의 모든 행에 대해 한 번씩 실행한다
 
+구문 예시  
+  SELECT column1, column2. ...
+  FROM table1 outher
+  WHERE column1 연산자 (SELECT colum1, columnn2
+                                       FROM table2
+                                       WHERE expr1 = outher.expr2);
+
+ #서브 쿼리에 메인 쿼리와의 상관 관계를 정의
+ #서브 쿼리의 WHERE 절에서 메인 쿼리에서 사용하는 테이블의 열을 서브 쿼리의 관련된 데이터 비교
+ #서브 쿼리가 매인 쿼리에 의해서 실행
+ #메인 쿼리의 모든 후보 행의 수만큼 반복 실행
+ #처리할 데이터의 양에 따라 처리 시간이 상당히 많이 소요되며 성능 저하 가능성
+
+
+EXISTS연산자
+#외부 쿼리에서 검색된 값이 내부 쿼리에서 검색된 값의 결과 집합에 존재하는지 여부를 검사하기 위한
+상호 관련 서브쿼리
+#EXISTS 연산자를 사용한다
+#상호 관련 서브 쿼리의 처리 성능 상의 문제 해소
+#서브 쿼리가 한 행 이상 반환하면 TRUE를 반환
+#해당 값이 없으면 FALSE를 반환
+
+
+NOT EXISTS 연산자
+#메인 쿼리에서 검색된 값이 서브 쿼리에서 검색된 값의 결과 집합에 속하지 않는지 여부를 검사
+#EXISTS 연산자와 동일한 프로세스를 실행
+#상수 'X'를 반환하지 않는 후보 해에 대한 정보를 반환하는 연산자
+
+
+예제
+
+#상호 관련 서브 쿼리를 이용해 소속 부서의 평균급여보다 급여를 더 많이 받는 사원의 이름,급여,
+부서 번호를 출력한다
+SELECT emp_name, salary,dept_id
+FROM y_emp outher
+WHERE salary > (SELECT AVG(salary) FROM y_emp
+                WHERE dept_id = outher.dept_id;
+
+
+#다음 예제는 EXISTS 연산자를 사용하여 부하 직원이 있는 사람을 검색한다.
+SELECT emp_id, emp_name, position, dept_id
+FROM y_emp o
+WHERE NOT EXISTS ( SELECT 'X' FROM y_emp
+                   WHERE mgr_id == o.emp_id);
+
+
+#NOT EXISTS 연산자를 사용하여 부하 직원이 없는 사원,평사원들을 검색
+SELECT emp_id, emp_name,position, dept_id
+FROM y_emp o
+WHERE NOT EXISTS (SELECT 'X' FROM y_emp
+                  WHERE mgr_id == o.emp_id);
+
+
+
+FROM절에 사용하는 서브쿼리(INLINE VIEW)
+
+
+인라인 뷰(INLINE VIEW)*중요*
+#SELECT 문장의 FROM절에 사용된 서브쿼리
+#조인 시 테이블에 별칭을 주는 것처럼 서브 쿼리에 대하여 별칭 사용
+#하나의 SQL문장 내부에서는 서브 쿼리의 결과 집합을 하나의 테이블처럼 접근하기 떄문에 인라인 뷰
+라고 한다
+#데이터베이스 실무에서 많이 사용한다
+
+
+인라인 뷰 에제
+
+#400번 미만의 부서에 속하는 사원들에 대하여 소속 부서의 평균 급여보다 많은 급여를 받는 모든 사원의
+이름,급여,부서번호 및 소속 부서의 평균급여를 표시
+SELECT a.amp_name, a.salary, a.dept_id, b.salavg
+FROM   y_emp a
+JOIN(SELECT dept_id,AVG(salary) salavg FROM y_emp
+     GROUP BY dept_id) b
+ON(a.dept_id = b.dept_id)
+AND a.dept_id < 400
+AND a.salary > b.salavg;
+
+
+Top-N분석 쿼리
+#테이블에서 조건에 맞는 최상위 레코드 n개 또는 최하위 레코드 n개를 표시하는 쿼리문을 의미
+#인라인 뷰의 기본구조에 ROWNUM 등 몇가지 필수 구성 요소를 포함하여 작성
+
+#TOP-N 쿼리의 예시
+#인터넷의 포털사이트에는 검색에 순위
+#서점이나 온라인 쇼핑몰의 베스트셀러 정보
+#회사의 최상위 소득자 세명
+#회사에 가장 오래 근무한 사원 세명
+
+
+TOP-N 분석 수문
+
+#구문예시
+SELECT [column,...],ROWNUM
+FROM   (SELECT[columnn,...]
+        FROM table
+WHERE ROWNUM <= N;
+
+#서브쿼리 또는 인라인 뷰에 ORDER BY 절을 반드시포함
+#메인 쿼리에 의사열 ROWNUM을 SELECT목록에 반드시 포함
+#WHERE 절에 반환될 행 수를 제한하기 위하여 의사열인 ROWNUM과 < 또는 <= 연산자 사용
+
+
+예제
+
+#다음은 CASE 구문에 서브 쿼리가 사용되는 경우이다. 서브 쿼리는 사원들에 대하여 위치 
+ID가 4인 부서의 부서 ID인 400을 반환한다. 메인 쿼리의 CASE 표현식에서는 서브 쿼리의 결과를 사용하여 
+메인 쿼리에서 검색된 행의 부서 ID가 400이면 대구를 그렇지 않으면 기타를 EMPID, EMP_NAME과 함께 표시한다.
+
+SELECT emp_id, emp_name,
+       (CASE WHEN dept_id =
+                 (SELECT dept_id FROM y_dept
+                  WHERE loc_id = 4)
+             THEN '대구' ELSE '기타' END) loc_name
+FROM   y_emp;
+
+
+#이번 예제는 ORDER BY 절에 사용된 서브 쿼리이다. 다음은
+Y_EMP 테이블에 존재하지 않는 Y_DEPT 테이블의 DEPT_NAME 열을 기준으로 Y_EMP의 결과를 정렬한다.
+SELECT    emp_id, emp_name
+FROM      y_emp e
+ORDER BY (SELECT dept_name 
+           FROM y_dept d
+           WHERE e.dept_id = d.dept_id);
+
+
+
+WITH절의 사용
+
+
+
+WITH 절을 사용하여 쿼리 블록 정의
+
+#이름과 함께 정의한 WITH 절의 쿼리 블록을 SELECT 문에서 참조하는 방법
+#메인쿼리가 동일한 쿼리 블록을 여러 번 참조하거나 복잡한 조인이나 집계를 해야 하는 경우 매우 유용
+#내용이 복잡한 복합 SELECT 문에서 해당 쿼리 블록이 여러 번 발생하는 경우 유용
+#같은 쿼리를 다시 사용할 수 있어서 성능 향상
+
+
+예제
+
+
+#전체 부서의 평균 총 급여보다 총 급여가 많은 부서의 부서이름(DEPT_NAME)
+ 및 총 급여를 표시하기 위한 WITH절 사용 예제
+ WITH 
+    dept_total_sal AS (  SELECT d.dept_name, SUM(e.salary) AS dept_total
+                         FROM y_emp e
+                         JOIN y_dept d ON e.dept_id = d.dept_id
+                         GROUP BY d.dept_name),    
+    total_avg_sal AS (SELECT SUM(dept_total) / COUNT(*) AS dept_avg
+                      FROM dept_total_sal)    
+SELECT * FROM dept_total_sal
+WHERE dept_total > (SELECT dept_avg 
+                    FROM total_avg_sal);
+
+
+예제 설명
+
+WITH 절의 쿼리블록
+#모든 부서에 대해 부서 이름별 총 급여를 계산한 DEPT_TOTAL_SAL
+#DEPT_TOTAL_SAL의 결과에 대한 평균 총 급여를 저장한 TOTAL_AVG_SAL
+#SELECT 문에서 WITH 절에 정의한 쿼리 블록들을 사용
+
+결과 데이터
+#첫 번째 쿼리블록 DEPT_TOTAL_SAL에서 계산한 총 급여를 두 번째 쿼리 블록에서 계산한 평균 총 급여와 비교
+#특정 부서의 총 급여가 전체 부서의 평균 총 급여보다 많으면 해당 부서 이름 및 총 급여를 표시한 것
+
+WITH절의 특장점
+#WITH 절은 SELECT 문에 대해서만 사용 가능
+#쉼표(,)로 구분하여 여러 개의 쿼리 블록 정의 가능
+#쿼리 블록은 다른 쿼리 블록을 참조하여 작성 가능
+#내부적으로 인라인 뷰 또는 임시 테이블로 해석됨
+#성능을 향상시키고 더 간단한 SQL 코드 작성 가능
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
