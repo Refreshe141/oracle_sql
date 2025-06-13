@@ -1,4 +1,4 @@
-집합 연산자의 사용
+8-1집합 연산자의 사용
 
 집합 SET 연산자의 사용
 #SET 연산자를 사용하여 둘 이상의 쿼리 결과를 하나로 결합한다
@@ -159,6 +159,149 @@ SET 연산자들의 사용법 정리
 #결과에 사용되는 열 머리글은 첫 번쨰 쿼리문의 열 이름을 따른다
 #UNION ALL 연산자를 제외한 나머지 연산자들은 기본적으로 결과가 SELECT절의 첫쨰 열에 
 대해 오름차 순으로 정렬된다
+
+
+
+
+
+8-2계층 쿼리
+
+
+계층쿼리의 개념
+#윈도우의 탐색기와 같은 계층적 데이터 구조를 의미하는 트리 구조의 보고서를 생성하는 방법
+#테이블의 행 사이에 존재하는 자연스러운 계층 관계를 이용하여 데이터를 계층구조로 검색
+#단일 테이블의 행 사이에 계층 관계가 존재할 경우에만 트리 검색을 통해 계층구조를 생성
+
+
+
+y_emp 테이블에 존재하는 계층관계
+#emp_id열과 mgr_id열 사이에 보고와 관리를 위한 계층 체계존재
+
+구문 예제
+SELECT [LEVEL], column, 표현식...
+FROM   table_name
+[WHERE 조건(s)]
+[START WITH 조건(s)]
+[CONNECT BY PRIOR 조건(s)];
+
+
+#START WITH 절
+계층 구조에서 **루트(시작점)**을 지정할 때 사용합니다. 예를 들어 
+가장 상위 부서, 최고 관리자 등.
+#CONNECT BY PRIOR 
+부모-자식 관계를 정의합니다.
+PRIOR 키워드를 사용해 어떤 열이 부모고 어떤 열이 
+자식인지 지정하며, 이 순서에 따라 검색 방향이 결정됩니다.
+
+
+
+
+기본적인 계층 쿼리
+
+
+START WITH절
+#트리의 루트(시작점)로 사용될 행이 결정
+#루트행을 지정하기 위한 유효한 조건을 지정
+CONNECT BY절
+#검색의 방향을 즉 부모로부터 시작하여 자식 방향으로 수행될지 또는 자식부터
+시작하여 부모 방향으로 수행될지 결정
+#PRIOR 바로 뒤에 어떤 열이 오는가에 따라 결정
+#CONNNECT BY 절의 작성방식이 검생 방향 결정
+#PRIOR연산자 다음에 부모 열이 오면 *TOP_Down검색 트리*
+#PRIOR연산자 다음에 자식 열이 오면 *Bottom_Up검색 트리*
+
+
+
+*예제* 
+#TOP_Down검색 트리사용 
+SELECT emp_id, emp_name,position, mgr_id
+FROM y_emp
+START WITH emp_id = 1001
+CONNECT BY PRIOR emp_id = mgr_id;
+
+
+#Bottom_Up검색 트리
+SELECT emp_id, emp_name,position, mgr_id
+FROM y_emp
+START WITH emp_id = 1097  --어디를 시작점으로 할 것인가를 결정해줌 
+CONNECT BY emp_id = PRIOR mgr_id; -- PRIOR 연산자를 함께 사용하여 방향 결정
+
+
+
+계층쿼리 관련 함수
+#계층 쿼리 결과가 평면적이고 부모 행과 자식 행을 식별하기 어려움
+#SYS_CONNECT_BY_PATH함수를 이용하여 현재 행까지의 부모-자식 트리의 경로를 확인
+#경로에 사용할 열 이름과 경로표시기호에 해당하는 문자 두 개의 인수 필요
+
+
+
+예제
+
+
+ELECT emp_id, emp_name,SYS_CONNECT_BY_PATH(emp_id, '/') path --  괄호 안의 인수값에 따라 결과 달라짐
+FROM y_emp
+START WITH emp_id = 1001
+CONNECT BY PRIOR emp_id = mgr_id;
+
+
+
+
+계층쿼리의 레벨 
+
+LEVEL
+#오라클의 의사 열
+#계층에서 열의 순위 또는 레벨 표시
+#TOP-Down 트리의 각 노드와 해당 LEVEL 값
+
+예제
+
+SELECT emp_id, emp_name, level, SYS_CONNECT_BY_PATH(emp_id, '/') path
+FROM y_emp
+START WITH emp_id = 1001
+CONNECT BY PRIOR emp_id = mgr_id;
+
+
+SELECT emp_id, emp_name, level, SYS_CONNECT_BY_PATH(emp_id, '/') path
+FROM y_emp
+START WITH emp_id = 1067
+CONNECT BY  emp_id = PRIOR mgr_id;
+
+
+SELECT LPAD(emp_id, LENGTH(emp_id)+(LEVEL+2)-2, '-')AS chart
+FROM y_emp
+START WITH emp_id = 1001
+CONNECT BY PRIOR emp_id = mgr_id;
+
+
+계층 쿼리에서 분기 제거
+#계층 쿼리에서 WHERE 및 CONNECT BY 절을 사용하여 트리의 일부 제거 가능 
+#WHERE 절을 사용하면 특정 행만 제거
+#CONNECT BY 절을 사용하면 특정 분기를 모두 결과에서 제거
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
