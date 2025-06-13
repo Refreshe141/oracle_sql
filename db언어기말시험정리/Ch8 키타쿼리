@@ -1,0 +1,184 @@
+집합 연산자의 사용
+
+집합 SET 연산자의 사용
+#SET 연산자를 사용하여 둘 이상의 쿼리 결과를 하나로 결합한다
+#단일 SELECT 문에 의해 검색되는 행들을 하나의 집합으로 간주
+#둘 이상의 SELECT문에 의해 검색되는 행 집합에 대하여 여러 가지 집합 연산자를 적용
+합집합,교집합,차집합(데이터 중복 제거)
+
+#집합 연산자의 결과는 SELECT 절의 첫번쨰 열에 대해 (*오름차순으로 정령한다*)(UNION ALL 제외)
+
+
+집합(SET) 연산자의 사용
+
+#구문예시
+SELECT statement 1
+[UNION | UNION ALL | INTERSECT | MINUS]
+SELECT statement 2
+[ORDER BY [column_name | 별칭 | column_위치값]];
+
+#SET 연산자는 두 개의 SELECT 문장 사이에 사용
+#SQL 종료문자는 문장의 끝에 한 번만 사용
+
+
+
+
+
+
+
+UNIONN 연산자
+#두 쿼리중 어느 한 쪽에 의해서라도 선택된 행은 모두 반환
+#중복된 행은 한번만 표시
+
+예제
+
+#두문장의 컬럼 수가 같아야 함
+SELECT emp_id, FROM y_emp
+UNION
+SELECCT emp_id FROM y_award;
+
+
+# 두 문장의 대응되는 컬럼의 데이터타입이 같아야 함
+
+SELECT emp_id, position FROM y_emp
+UNION
+SELECCT emp_id, depd_id FROM y_award;
+
+
+#결과는 첫 번쨰 컬럼을 기준으로 같아야 한다(중복행 제거를 위해)
+SELECT emp_id, position FROM y_emp
+UNION
+SELECCT emp_id, position FROM y_award;
+
+
+#이 문장은 내부적으로 정열을 두번 수행(불필요한 정열작업이 포함)
+SELECT emp_id, position FROM y_emp
+UNION
+SELECCT emp_id, position FROM y_award
+ORDER BY emp_id;
+
+
+
+
+
+
+UNION ALL 연산자
+
+#UNION 연산자와 달리 중복 행이 제거되지 않는다
+#기본적으로 출력이 정령되지 않음
+#결과를 정렬하기 위한 오버헤드가 발생하지 않으므로 UNION보다 연산속도가 빠르다
+#두 행 집합 사이에 중복되는 행이 없다면 UNION ALL을 사용하는 것을 권장한다
+
+
+예제
+
+
+
+# y_emp 테이블에서 직원 ID(emp_id)와 직급(position)을 가져온다.
+#y_award 테이블에서도 직원 ID와 직급을 가져온다.
+#두 테이블에서 가져온 결과를 모두 합친다.
+#중복된 데이터도 포함해서 전부 보여준다. (UNION ALL 사용)
+SELECT emp_id position FROM y_emp
+UNION ALL
+SELECCT emp_id position FROM y_award;
+
+요약
+#UNION ALL: 중복 포함한 합집합
+#두 SELECT 결과를 그대로 연결해서 보여줌
+#emp_id, position이라는 동일한 컬럼 구조가 있어야 함
+
+
+
+
+
+INTERSECCT 연산자
+#수학의 교집합과 마찬가지로 사용되어 SELECT절에서 공통적인 행을 모두 반환한다
+#SET 연산자를 포함하는 열을 추가하거나 삭제하면 결과가 달라진다
+
+
+
+예제
+
+
+#y_emp 테이블에서 직원 ID(emp_id)와 부서 ID(dept_id)를 가져온다.
+#y_award 테이블에서도 직원 ID와 부서 ID를 가져온다.
+#두 테이블에서 모두 일치하는 행만 결과로 보여준다.
+(즉, 두 테이블에 동시에 존재하는 행만 출력됨)
+SELECT emp_id dept_id FROM y_emp
+INTERSECT
+SELECT emp_id dept_id FROM y_award;
+
+요약
+#INTERSECT: 교집합, 두 SELECT 결과에 모두 존재하는 데이터만 출력
+#중복은 자동 제거됨
+#SELECT 문들의 컬럼 수와 데이터 타입이 같아야 함
+
+
+
+
+
+
+MINUS 연산자
+
+#첫 번째 SELECT 문이 반환한 행으로부터 두 번쨰 SELLECT문이 반환한 행을 제외한 나머지 반환
+#수학에서 차집합과 동일
+#MINUS 연산자는 SELECT 문장의 순서를 바꾸면 결과도 달라짐
+
+
+예제
+
+SELECT emp_id, awrdee FROM y_award
+MINUS
+SELECCT emp_id, emp_name FROM y_emp;
+
+요약
+#MINUS: 차집합
+#앞 SELECT 결과에서 뒤 SELECT 결과를 뺀 것
+#중복은 제거됨 (자동 중복 제거)
+#두 SELECT의 컬럼 수, 순서, 자료형이 동일해야 함
+
+
+
+
+#❗주의: 컬럼명이 달라도 자료형과 순서가 같으면 가능
+SELECT emp_id, emp_name FROM y_emp;
+MINUS
+SELECT emp_id, awrdee FROM y_award
+
+
+
+
+
+
+
+
+SET 연산자들의 사용법 정리
+#SET연산자는 두 쿼리문 사이에 위치한다
+# 모든 SELECT 문에서 지정되는 열의 개수와 데이터 유형은 서로 같아야 한다
+#모든 SELECT문에서 사용된 열 이름은 같지 않아도 된다.
+#결과에 사용되는 열 머리글은 첫 번쨰 쿼리문의 열 이름을 따른다
+#UNION ALL 연산자를 제외한 나머지 연산자들은 기본적으로 결과가 SELECT절의 첫쨰 열에 
+대해 오름차 순으로 정렬된다
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
