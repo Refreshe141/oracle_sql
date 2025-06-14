@@ -1,0 +1,492 @@
+9-1 DML의 개요
+
+데이터 조작어 DML
+#데이터베이스에 데이터추가, 갱신, 또는 삭제할 떄 실행되는 SQL명령어이다
+#기본적인 명령문의 종류
+INSERT: 테이블에 새 행을 추가
+UPDATE:테이블의 기존 행을 수정
+DELLETE:테이블에서 기존 행을 삭제
+MERGE:테이블에 INNSERT와 UPDATE를 동시에 처리
+
+트랜잭션
+#논리 작업 단위를 형성하는 DML 문의 모음이다
+#데이터베이는 트랜잭션 단위로 데이터베이스에 변경내용을 적용한다
+#트랜잭션에 포함된 명령문 중 하나라도 실행되지 못하면 나머지 명령문과 함께 모두 취소한다
+
+
+
+9-2INSERT 명령
+
+
+
+INSERT 방법
+
+INNSERT INTO ... VALUES명령
+#한번에 하나의 행을 테이블에 직접 입력한다
+
+서브쿼리 사용
+#한번에 여러 행을 테이블에 입력합니다
+#한번에 여러 행을 테이블에 입력하는 다중 테이블 INSERT
+
+
+-단일행 INSERT-
+
+#INSERT INTO...VALUES~ 명령문을 사용하면 한번에 한 행씩 테이블에 추가
+
+구문예제
+INSERT INTO table [column, column...)]
+VALUES (value[, value...]);
+
+#INSERT INTO 절에는 대상 테이블의 이름 및 선택적으로 데이터를 입력할 열 이름을 지정
+#VALUES 절에는 입력할 행의 값을 나열
+
+
+에제
+
+#다음은 Y_DEPT테이블에 새 행을 추가하는 INSERT명령이다
+INSERT INTO y_dept(dept_id, dept_name, mgr_id, locc_id)
+VALUES(600 '생산관리', 1038, 6)
+
+
+
+
+-INSERT 시 NULL 값이 생성되는 경우-
+
+-암시적 방법 
+#INSERT INTO 절의 열 목록에서 해당 열을 생략하는 경우
+
+-명시적 방법
+#VALUES 절에서 해당 열에 NULL을 명시적으로 지정하는 경우
+
+예제
+
+#다은은 Y_DEPT 테이블의 MGR_ID와 LOCC_ID 열에 NULL값을 생성하고 확인해 보는 예제이다
+
+---목록에 입력한 열만 지정하여 암시적으로 NULL값 생성하기---
+INSERT INTO y_dept(dept_id, dept_name)
+VALUES(700, '회계부');
+
+---열 개수를 맞추기 위해 명시적으로 NULL을 입력---
+INSERT INTO y_dept
+VALUES(800,'시스템관리',NULL,NULL);
+
+
+-INSERT중 밸생하는 일반적 오류-
+# NOT NULL이 정의된 열에 값을 누락한 경우
+#중복 값으로 고유성 제약 조건을 위반한 경우
+#외래 키 제약 조건에 위반한 경우
+#CHECK 제약 조건에 위반한 경우
+#데이터 유형이 일치하지 않는 경우
+# 값의 폭(width)이 너무 넓어 열에 맞지 않는 경우
+
+
+-INSERT 시 날짜 데이터의 사용-
+#두자리수의 연도 사용시 RR과 YY형식
+
+YY/MM/DD형식
+#세기 기본 값으로 항상 현재 세기를 입력
+
+RR/MM/DD 형식
+#현제 세기가 0~49년인 경우 이전 세기를 입력
+#날짜에는 시간 정보가 포함된다#입력 시 시간을 생략하면 기본 시간인 자정으로 입력
+#날짜를 기본 형식이 아닌 다른 형식으로 입력하려면 TO_DATE함수를 사용
+
+예제
+
+
+#다음 예제는 Y_EMP 테이블에 새 사원 정보를 입력하고 이떄 HIREDATE 열에 현재 날짜 및 시간을 제공하기
+위해 SYSDATE함수를 사용한다
+INSERT INTO y_emp(emp_id, emp_name, hiredate, dept_id)
+VALUES(2007, '박민영', SYSDATE, 700);
+#다음 쿼리를 실행하여 Y_EMP 테이블을 조회해 보면 박민영 사원의 입사일에 현재의 날짜가
+입력된 것을 확인할수 있다
+SELECT emp_id, emp_name,hiredate, dept_id
+FROM y_emp
+WHERE emp_id = 2007;
+# 그다음 커밋을 수행하여 변경사항을 데이터 베이스에 적용
+
+
+
+#예제는 새 사원의 정보를 Y_EMP 테이블에 기록하면서 HIREDATE 열을 99년 2월 3일로 설정하는데 형식에 
+ 따라 HIREDATE의 연도는 1999 또는 2099로 저장될 수 있다. 입력 후 쿼리를 통해 결과를 확인해 본다.
+
+INSERT INTO y_emp(emp_id, emp_name, hiredate)
+VALUES (2008, '윤현민', TO_DATE('99/02/03','YY/MM/DD'));
+INSERT INTO y_emp(emp_id, emp_name, hiredate)
+VALUES (2009, 'Jason Lee', TO_DATE('99/02/03','RR/MM/DD'));
+
+SELECT emp_id, emp_name, TO_CHAR(hiredate,'yyyy/mm/dd')
+FROM y_emp
+WHERE emp_id IN (2008, 2009);
+
+
+
+
+
+-다중행의 INSERT-
+INSERT 문에 VALUES 절 대신 서브쿼리를 사용
+#기존 다른 테이블에서 선택한 데이터를 대상 테이블의 행으로 추가
+#다른 테이블로부터 선택한 여러 행을 대상 테이블로 한꺼번에 복사하여 입력
+
+구문예제
+INSERT INTO table [ccolumn(, column)]
+subquery;
+#INSERT 절의 열 목록에서 열의 수 및 데이터 유형을 서브 쿼리의 열의 수 및 데이터 유형과 일치해야함
+
+
+
+
+
+
+9-3 UPDATE 명령어
+
+
+-UPDATE문-
+#기존행을 수정한다
+#WHERE절을 지정하여 UPDATE문이 특정 행을 수정한다
+
+구문예제
+UPDATE table
+SET column =value [, column = value,...]
+[WHERE 조건];
+#SET절에 COLUMN = VALUE를 여러 번 지정하여 한꺼번에 여러 열을 갱신
+
+
+예제
+
+
+#다음은 EMP300테이블의 1037번 사원의 근무 부서 번호를 400번으로 변경하는 UPDATE작업이다
+UPDATE emp300
+SET dept_id = 400
+WHERE emp_id = 1037;
+#DML은 변경된 데이터를 화면에 출력하지 않음 변경된 데이터는 해당 테이블을 다시 쿼리해서 확인
+
+
+
+-UPDATE-문의 WHERE절
+#WHERE 절을 지정하여 한 번에 여러 행 변경
+#WHERE절을 생략하면 테이블의 모든 행 갱신
+#WHERE절의 표현식이 잘못되어 조건에 일치하는 행이 없으면 오류가 나지 않고 0행이 갱신
+되었습니다 라는 메시지 출력함
+
+
+예제
+#다음은 WHERE절을 생략하여 테이블의 모든 행이 수정된 경우다
+UPDATE emp300
+SET dept_id=80;
+SELECT * FROM emp300;
+
+
+-UPDATE절에 서브쿼리 사용-
+#SET 절에서 연산자의 오른쪽에 변경할 값 대신 값을 반환할 서브 쿼리를 사용
+#UPDATE 대상 테이블과 서브쿼리에서 사용하는 테이블이 서로 다른 경우도 허용
+
+예제
+
+#다음 예제는 서브쿼리를 사용하여 UPDATE를 실행한다
+UPDATE emep300
+SET salary = (SELECT salary FROM y_emp
+              WHERE emp_id =1038),
+    dept_id =(SELECT dept_id FROM y_emp
+              WHERE emp_id = 1038)
+WHERE emp_id = 1087;
+
+
+
+
+9-4DELETE명령어
+
+DELETE문
+#테이블에서 기존 행을 삭제
+#WHERE절을 추가
+#특정 행을 삭제하거나 한꺼번에 여러 행 삭제
+#WHERE절을 생략하면 모든 행 삭제
+WHERE 절에 해당하는 행이 없으면 삭제되는 행이 없음
+
+
+구문예제
+DELETE [FROM] table
+[WHERE 조건];
+
+
+예제
+
+
+#EMP300테이블에서 1019번 사원을 삭제
+DELETE FROM emp=300
+WHERE emp_id = 1019;
+
+#WHERE 절을 생략한 DELETE 명령문을 수행한 후의 출력 메시지를 확인하고 커밋한다
+DELETE FROM emp300;
+COMMIT;
+
+
+
+
+9-5 MERGE 명령어
+
+MERGE명령
+#INSERT 및 UPDATE 명령의 결합
+#DML을 여러번 하지 않고 행을 조건에 따라 UPDATE하거나 INSERT,DELETE
+#데이터 웨어하우징 응용 프로그램에서 유용하게 사용된다
+#여러 원본의 데이터를 사용하여 작업해야 할 경우 중복 데이터로 인한 오류가 빈번히 발생하는 문제 해결
+#PL/SQL 루프문과 함꼐 여러 DML 문을 사용하는 방법 대체
+#사용하기도 쉽고 하나의 SQL 문장으로 처리하기 떄문에 훨씬 간단하므로 더 권장
+
+
+구문예제
+
+#ON절의 조건에 의해 INSERT 또는 UPDATE 결정
+MERGE INTO table_name table별칭
+ USING ( table|view|sub_query)별칭
+ ON(join_조건)
+ WHEN MATCHED THEN
+   UPDATE SET
+   col1 = col_val1,
+   col2 = col2_val
+ [DELETE WHERE (조건)]
+ WHEN NOT MATCHED THEN
+  INSERT (column_name,...)
+  VALUES (column_values,...);
+
+
+예제
+
+-- 다음 명령문을 실행하여 OLD_EMP 테이블의 구조와 데이터를 먼저 확인해 본다.
+DESC old_emp;
+SELECT * FROM old_emp;
+
+-- 다음과 같이 OLD_EMP 테이블에 Y_EMP 테이블을 MERGE 한다.
+-- 동일한 사원번호의 사원이 OLD_EMP에 존재하면 Y_EMP 테이블의 정보로 UPDATE 하고
+-- 존재하지 않으면 Y_EMP 테이블의 정보를 이용해 INSERT 한다.
+-- 그리고 부서정보가 NULL인 사원은 MERGE 과정에서 삭제를 한다.
+
+MERGE INTO old_emp o
+USING y_emp e
+ON (o.emp_id = e.emp_id)
+WHEN MATCHED THEN
+UPDATE SET
+    o.emp_name = e.emp_name,
+    o.position = e.position,
+    o.salary = e.salary,
+    o.dept_id = e.dept_id
+DELETE WHERE (e.position IS NULL)
+WHEN NOT MATCHED THEN
+INSERT VALUES(e.emp_id, e.emp_name, e.position, e.salary, e.dept_id);
+
+
+
+
+9-6데이터베이스 트랜잭션
+
+-트랜잭션의 개념-
+#데이터 일관성을 보장하기 위해 오라클 서버는 트랜잭션이라는 단위를 기반으로 데이터
+변경사항을 처리한다
+#데이터를 일관성 있게 변경하는 연관된DML문으로 구성
+#데이터 일관성 보장
+
+
+
+-트랜잭션의 시작과 종료-
+
+단일 트랜잭션
+#하나 이상의 DML문
+#하나의 DDL문이나DCLans
+#트랜잭션은 세션에서 첫 번쨰 DML문이 실행될 떄 시작
+
+트랜잭션이 종료되는 이벤트
+#COMMIT 또는 ROLLBAC문이 실행되는 경우
+#DDL문이 실행되는 경우
+#DCL문이 실행되는 경우
+
+
+*-트랜잭션의 종료-*
+
+명시적 종료
+#사용자가 DML 실행 후에 CCOMMIT 이나 ROLLBACCK 명령문을 사용한 경우
+
+암시적 종료
+#DDL문 또는 DCL문의 실행
+
+-TCL을 사용한 트랜잭션의 명시적 처리-
+COMMIT
+#현재까지 보류중인 모든 데이터 변경 내용을 데이터베이스에 영구저장하고 현재 트랜잭션 종료
+
+EOLLBACK
+#현재까지 보류 중인 모든 데이터 변경 내용을 취소하고 트랜잭션울 종료
+#변경되었던 데이터는 모두 이전값을 회복
+
+SAVEPOINT
+#현재 트랜잭션 내 특정시점에 이름을 주어 표기하는 명령문
+#ROLLBACK 시 SAVEPOINT 이름을 지정하여 해당 SAVEPOINT시점 이후의 변경 내용만 ROLLBACCCK 가능
+
+#COMMIT 및 ROLLBACK 문을 수행하여 논리적으로 관련된 작업을 묶음으로써 데이터 일관성이 보장되고
+데이터 변경 내용을 영구 저장하기 전에 미리 볼 수도 있다.
+
+
+예제
+# emp300 테이블 데이터 채우기
+INSERT INTO emp300
+SELECT emp_id, emp_name, salary, dept_id
+FROM y_emp
+WHERE dept_id = 300;
+COMMIT;
+SELECT * FROM emp300;
+
+
+# 두 개의 새션에서 트랜잭션 실습
+
+세션1                                          세션2 SELECT * FROM emp300;
+                                                  이전데이터 확인
+UPDATE emp300                                        UPDATE emp300
+SET salary = 220                                     SET dept_id = 200
+WHERE emp_id = 1097;                                 WHERE emp_id = 1081;
+SELECT * FROM emp300;                             서로 다른 행 수정 가능
+-- 변경된 데이터 확인                              UPDATE emp300
+                                                  SET dept_id = 20
+ROLLBACK;                                         WHERE emp_id = 1097;
+                                                 -- 동일한 행 수정 시도로 세션이 정지됨
+SELECT * FROM emp300;                               SELECT * FROM emp300;
+-- 세션 2에서 변경한 데이터 확인 불가             -- 정지 상태 해제 및 세션 1에서 변경한 데이터 확인
+                                                 COMMIT;
+SELECT * FROM emp300;
+-- 세션 2에서 변경한 데이터 확인
+
+
+
+
+-COMMIT-문
+#변경 후 COMMIT 문이 수행되기 전 데이터 상태
+#데이터는 이전 상태로 복구(ROLLBACK)될 수 있다.
+#데이터 변경한 세션은 변경된 데이터를 본다.
+#변경한 세션을 제외한 모든 사용자는 변경된 데이터를 볼 수 없다.
+#관련 명령에 LOCK이 수행되어 다른 사용자가 수정할 수 없다.
+#COMMIT 문이 수행된 이후 데이터 상태
+#데이터는 이전 상태로 되돌릴 수 없다.
+#모든 사용자가 변경된 데이터를 볼 수 있다.
+#관련 명령 LOCK이 해제되어 다른 사용자가 값을 수정할 수 있다.
+
+
+
+예제
+
+
+#다음과 같이 트랜잭션 실행하면서 중간에 SAVEPOINT 생성
+-- 다음과 같이 트랜잭션을 진행하면서 중간에 SAVEPOINT를 설정한다.
+SELECT * FROM emp30;
+DELETE FROM emp30;
+SELECT * FROM emp30;
+SAVEPOINT S1;
+INSERT INTO emp30 VALUES(1007, '홍길동', '기획부', 300);
+SAVEPOINT S2;
+INSERT INTO emp30 VALUES(1008, '이순신', '영업부', 250);
+SAVEPOINT S3;
+INSERT INTO emp30 VALUES(1009, '강감찬', '인사부', 200);
+SELECT * FROM emp30;
+ROLLBACK TO S3;
+SELECT * FROM emp30;
+ROLLBACK TO S2;
+SELECT * FROM emp30;
+ROLLBACK;
+SELECT * FROM emp30; -- 모든 트랜잭션이 롤백되었다.
+
+
+
+-암시적 트랜잭션의 처리-
+TCL을 사용하지 않고 자동으로 트랜잭션이 종료되는 경우를 의미
+
+자동 COMMIT되는 경우
+#하나의 DDL 문이 실행되는 경우
+하나의 DCL 문이 실행되는 경우
+CONNECT 명령어를 사용하여 세션을 변경하는 경우
+SQL*Plus 종료하는 경우(EXIT 명령어 사용)
+
+자동 ROLLBACK 되는 경우
+SQL*Plus 또는 SQL Developer가 비정상적으로 종료되는 경우
+시스템 장애가 발생한 경우
+
+
+-롤백의 원리-
+UNDO Data
+#DML의 실행으로 변경된 데이터의 이전 값
+
+UNDO Datafile
+#UNDO Data를 트랜잭션 종료 전까지 임시로 보관하는 UNDO Data 전용 데이터파일
+
+DML 처리 방식
+#데이터 변경 전 이전 값을 메모리에 저장 → UNDO Datafile로 이동
+#테이블에는 변경된 데이터 저장
+
+롤백의 원리
+#명시적 또는 암시적 ROLLBACK 시 UNDO Data가 다시 테이블에 변경된 데이터로 덮어씀
+
+
+-LOCK의 이해-
+#데이터베이스 시스템에서 동일한 자원을 액세스하는 트랜잭션 간에 발생할 수 있는
+교착과 상호 작용을 방지하기 위한 하나의 방식
+#오라클은 LOCK을 자동 수행
+#DML(데이터 조작어) 작업을 수행할 때, 오라클은 내부적으로 DML LOCK을 통해 데이터 보호
+#DDL(데이터 정의어) 작업은 객체 전체를 LOCK하여 해당 객체에 대한 다른 사용자 액세스를 제한
+#LOCK은 COMMIT 또는 ROLLBACK 될 때까지 유
+
+
+-DML 시 고려사항-
+#테이블 데이터와 UNDO 데이터는 별도의 데이터파일 사용으로 DML 실행 시 데이터 이동 발생
+#테이블에 입력/업데이트/삭제 → UNDO Datafile로 롤백을 수행할 UNDO 데이터로 복사
+#테이블로 다시 데이터 저장
+#많은 행을 포함하는 대용량 테이블에 대해 DML 수행 시 ROLLBACK 작업을 
+수행할 경우 더 많은 시간이 소요된다는 점 고려
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
