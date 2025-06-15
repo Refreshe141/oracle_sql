@@ -20,6 +20,7 @@ DDL사용
 
 10-2 데이터딕셔너리
 
+
 -데이터베이스의 두 가지 테이블-
 
 사용자 테이블
@@ -28,5 +29,318 @@ DDL사용
 데이터 딕셔너리
 #데이터베이스 자체에 관한 정보를 포함하는 테이블의 모음
 #데이터베이스 생성 시 자동으로 생성되어 오라클 서버에 의해 자동으로 유지 관리
+
+-데이터딕셔너리-
+#관리자가 계정인 SYS사용자가 모든 데이터 딕셔너리를 소유한다
+#기본 테이블 과 데이터 딕셔너리 뷰
+
+데이터 딕셔너리에 저장된 정보
+#데이터 베이스 사용자 정보
+#부여된 권한
+#데이터베이스 포함된 객체 정보
+#테이블 제약 조건
+
+
+-데이터 딕셔너리 뷰-
+#사용 목적 또는 정보를 제공하는 단위에 따라 접두어를 다르게 사용
+네 가지 범주
+# USER:현재 사용자가 소유하는 객체에 관한 정보
+# ALL:현재 사용자가 엑세스 할 수 있는 모든 객체에 관한 정보
+# DBA:데이터베이스의 모든 겍체에 관한 정보
+# v$:데이터베이스 서버 성능 메모리 및 LOCK 등에 대한 동적 성능 정보
+
+예제
+
+# 테이블과 관련 데이터 딕셔너리를 다음과 같이 조회한다
+SELECT COUNT(*) FROM uset_tables;
+SELECT COUNT(*) FROM all_tables;
+
+#다른 세션에서 관리자로 로그인하여 테이블 정보를 조회
+SELECT COUNT(*) FROM uset_tables;
+SELECT COUNT(*) FROM all_tables;
+SELECT COUNT(*) FROM dba_tables;
+
+#다음과 같이 쿼리하여 데이터베이스에 있는 모든 데이터 딕셔너리 뷰의 목록을 확인 할 수 있따
+SELECT table_name FROM dictionary
+
+
+
+10-3사용자 테이블
+
+테이블 생성
+#사용자가 필요한 데이터를 저장하기 위해 생성
+#CREATE TABLE문을 실행
+#사용자에세 CREATE TABLE 권한이 필요
+#데이터가 저장될 저장 영역 필요
+#사용자 테이블 생성 방법
+#직접 테이블의 이름과 구조를 정의
+#기존의 테이블 구조를 복사
+
+
+-사용자 직접 정의 테이블-
+#테이블의 이룸부터 저장할 데이터에 대한 열 이름 및 데이터타입 정의까지 모두 직접 정의함
+
+구문예제
+CREATE TABLE [schema.]table_이름
+(column1 datatype [DEFAULT 표현식][제약조건].
+column2 datatype [DEFAULT 표현식][제약조건],
+....
+);
+#필수사양
+테이블 이름과 열이름 열의 데이터 유형 및 길이
+
+
+-기존 테이블의 복사-
+#CRETE TABLE 구문에 열을 정의하는 대신 AS subquery 절을 사용
+#해당 서브 쿼리를 기반으로 한 테이블 생성
+#서브 쿼리에 의해 반환되는 행 삽입 수행
+
+구문예제
+CREATE TABLE table
+[(column, column...)] AS subquery
+
+
+
+
+
+10-4데이터타입의 정의
+
+
+
+-숫자와 문자데이터-
+
+#숫자 데이터
+NUMBER Type을 사용함
+#문자 데이터
+CHAR[(size)]
+#최소 1바이트 최대 2000바이트까지 길이로 고정하는 고정길이 문자 데이터
+#괄호 안에 지정하는 size가 고정길이라서 저장되는 문자의 길이에 상관없이 지정된 size의 바이트를
+모두사용
+VARCHAR2[(size)]
+#괄호 안에 지정하는 size가 최대 길이
+#최소 1바이트에서 최대 4000바이트까지 지정하는 가변 길이 문자 데이터
+
+
+-날짜 데이터-
+
+Date
+#초 단위까지의 날짜와 시간 값을 저장할 수 있는 7바이트 고정길이 데이터 타입이다
+#형 변환을 하지 않으면 기본적으로 연도,월,일 까지만 화면에 표시됨
+#글로벌 환경에서 클라이언트와 서버가 지리적으로 서로 떨어져 잇는 경우 날짜 정보를 조정해서 기록
+
+
+Datetiime
+#날짜와 시간 관련 계산을 쉽게 할 수 있는 기능
+#클라이언트와 서버가 서로 다른 시간대에 있는 경우 유용한 시간대 및 지역 시간대 기능 향상
+종류
+#IMESTAMP
+#TIMESTAMP WITH TIME ZONE
+#TIMESTAMP WITH LOCAL TIME ZONE
+#INTERVAL YEAR TO MONTH
+#INTERVAL DAY TO SECOND
+
+
+
+-IMESTAMP관련 타입-
+
+#IMESTAMP
+#TIMESTAMP WITH TIME ZONE
+#TIMESTAMP WITH LOCAL TIME ZONE
+사용자가 데이터를 요청하면 오라클에서 사용자의 지역 세션 시간 대에 맞게 해당 데이터를 변환
+
+
+구문예제
+IMESTAMP[fractional_secends_precision)[WITH TIME ZONE
+
+
+
+-INTERVAL YEAR TO MONTH-
+#연도 수 및 개월 수에 해당하는 기간을 저장하는 데이터타입
+#특정datatime 값으로 부터의 연도와 월의 차이를 나타낼 떄 사용
+
+구문예제
+INTERVAL YEAR [(year_precision)] TO MONTH
+
+
+
+-INTERVAL DAY TO SECOND-
+#기간을 날짜 수,시간 수, 분 수,초 수로 저장
+
+구문예제
+INTERVAL DAY [(day_precision)] TO SECOND [(practional_secends_precision)]
+
+
+
+10-5 테이블 수정
+
+
+-ALTER TABLE- 명령
+#ALTER TABLE 문을 사용하여 테이블 구조 변경
+#ALTER TABLE 문을 사용하는 작업
+새 열 추가
+기존 열 수정
+열의 기본값 정의
+열의 이름 수정
+열 삭제
+
+
+
+-기존 테이블에 새 열의 추가-
+
+#ALTER TABLE 문을 사용하여 기존 테이블에 새 열의 추가
+#새 열은 테이블 의 마지막 열로 정의
+#추가된 새 열의 모든 행은 초기에 NULL 값을 가지며 값을 채우고자 한다면 UPDAT 수핼 필요
+
+구문예제
+ALTER TABLE table
+ADD (column datatype [DEFAULT 표현식]
+[,  column datatype]...);
+
+
+
+-기존 테이블의 열 수정-
+
+ALTER TABLE문을 MODIFY 절과 함께 사용하여 열 정의를 수정
+#테이블이 정의된 열의 데이터 유형, 크기 및 기본값 등의 수정
+ALTER TABLE table
+MODIFY (column datatype [DEFAULT 표현식]
+[, column datatype]...);
+
+
+
+-테이블로부터 열의 제거-
+
+#ALTER TABLE 문을 DROP COLUMN 절과 함꼐 사용하여 테이블에서 열 삭제
+
+구문예제
+ALTER TABLE table
+DROP COLUMN column_name;
+#열에 데이터가 포함되어 있는지 여부와 상관없이 수행
+#삭제된 열은 ROLLBACK 불가
+#DROP COLUMN 작업은 다른 ALTER TABLE 명령문과 다르게 실행에 소요되는 시간이 테이블의 행수에 비례
+
+
+
+
+-ALTER TABLE의 SET UNUSED 옵션 사용
+
+#하나 이상의 열을 UNUSED로 표시한 후 DROP UNUSED COLUMNS 
+옵션을 사용하여 여러 열을 한꺼번에 제거 가능
+#UNUSED로 표시된 열은 테이블의 행에 열 데이터가 남아 있지만 삭제된 것으로 처리
+#사용자 입장에서는 열이 제거된 것과 동일
+#ROLLBACK 불가
+#DROP 절 실행에 소요되는 응답 시간 향상 효과
+
+
+-테이블 READ ONLY 설정-
+
+#테이블을 읽기 전용 모드로 설정 가능
+#테이블의 DML문은 불가능
+#DROP TABLE과 같은 DDL문은 실행 가능
+#읽기 전용 테이블을 읽기/쓰기 모드로 되돌리려면 READ WRITE를 지정
+
+구문예제
+ALTER TABLE table_name [READ ONLY | READ WRITE];
+
+
+
+10-6 테이블의 삭제
+
+
+-DROP TABLE 문 사용-
+
+#테이블의 모든 데이터 및 구조 삭제
+#테이블과 연관된 인덱스도 모두 삭제
+#테이블과 연관된 뷰와 동의어는 사용불가 상태로 유지
+#해당 테이블을 소유하고 있거나 높은 레벨의 권한이 있는 경우 테이블 제거 가능
+#자동으로 커밋되므로 ROLLBACK 불가
+#PURGE 옵션을 사용하지 않은 경우 Flashback은 가능
+
+구문예제
+DROP TABLE table_name [purge];
+
+
+
+-삭제된 테이블에 대한 휴지통 기능-
+
+#FLASHBACK 명령문으로 삭제된 테이블을 휴지통으로부터 복원
+#실수로 잘못 삭제한 테이블을 쉽고 빠르게 복원하는 기능
+#사용자가 테이블을 삭제하면 오라클 서버는 BIN$~ 접두어로 시작되는 
+#이름의 휴지통 객체 이름으로 변경하여 보관
+#사용자는 휴지통 객체가 존재한다면 언제라도 해당 테이블 복원 가능
+
+
+
+
+10-7 테이블 TRUNCATE
+
+
+-TRUNCATE TABLE 문-
+#테이블에서 모든 행을 제거하고 해당 테이블이 사용하던 저장 공간을 해제하는 DDL 문
+#TRUNCATE TABLE 문으로 수행한 행 제거 작업은 ROLLBACK 불가
+#결과는 DELETE TABLE을 WHERE 절 없이 사용하고 COMMIT한 것과 동일
+
+구문예제
+
+TRUNCCATE   TABLE  table_name;
+
+
+10-8 테이블 이름 변경
+
+-RENAME 명령-
+#테이블 이름 변경
+#테이블의 이름이 지나치게 길거나 저장된 데이터와 연관성이 없는 경우
+#테이블의 저장구조를 재구성할 모ㅗㄱ정
+
+구문예제
+RRENAME old_name TO new_name;
+#뷰, 시퀀스 또는 동의어의 이름 변경도 가능
+#이름을 변경할 객체의 소유자가 수행
+
+
+예제
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
