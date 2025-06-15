@@ -1,0 +1,291 @@
+13-1 뷰의 개념과 종류
+
+-뷰의 개념-
+#논리적으로 하나 이상의 테이블에 있는 데이터의 부분 집합
+#뷰의 기반이 되는 기본 테이블 또는 다른 뷰를 기반으로 하는 논리 테이블
+# 뷰를 통해 테이블의 데이터를 엑세스하는 사용자는 뷰에서 제공되는 데이터만 제한
+자체적으로 데이터를 포함하지 않음
+뷰를 통해 테이블의 데이터를 보거나 일부 변경 가능
+
+
+-뷰의 사용 목적-
+#테이블의 열을 선택적으로 표시하므로 데이터 액세스를 제한 할 목적으로 사용
+#보안성과 편의성을 높이기 위해
+
+
+-뷰의 종류-
+
+단순 뷰
+#뷰를 통해 볼 수 있는 데이터가 기본 테이블 데이터의 부분집합일 경우는 대부분 단순 뷰
+
+
+복합 뷰
+#뷰를 통해 보는 데이터가 기본 테이블 데이터에 함수나 그룹 연산 조인 등을 수행한 결과인 경우
+
+
+
+-단순 뷰의 특징-
+#단일 테이블의 데이터만 포함한다
+#뷰의 정의에 함수 또는 데이터 그룹을 포함하지 않는다
+#뷰의 정의에 여러 테이블의 조인이 포함되지 않는다
+
+
+
+-복합 뷰의 특징-
+#여러 테이블의 데이터를 포함한다
+#뷰의 정의에 함수 또는 데이터 그룹을 포함한다
+#뷰의 정의에 여러 테이블의 조인이 포함된다
+
+
+
+13-2 뷰의 생성
+
+-뷰의생성-
+CRAETE VIEW 문에 서브 쿼리를 포함시켜 뷰를 생성
+#뷰를 생성하면서 서브 쿼리의 열에 별칭을 포함시켜 뷰에서 사용 할 열 이름을 제어
+#WITH CHECT OPTION 이나 WITH READ OMLY 옵션을 추가해서 VIEW를 통한 데이터액세스 방식 제한
+
+
+
+-뷰를 통한 DML 작업의 규칙-
+#뷰 정의에 다음,과 같은 항목이 포함된 경우 뷰를 통해 데이터를 INSERT 할 수 없다
+#그룹 함수
+#GROUP BY 절
+#DISTINCT
+#의사 열 ROWNUM 키워드
+
+
+
+13-3뷰 정보 및 뷰의 제거
+
+-뷰 관련 정보-
+#뷰의 이름과 정의는 데이터 딕셔너리 USER_VIEWS에 저장
+#USER_NIEWS를 쿼리로 뷰를 작성했던 서브쿼리의 내용 참조
+
+
+
+-뷰의 제거-
+DROP VIEW 문을 사용하면 뷰를 제거
+#뷰의 기반이 되는 테이블은 아무 영향이 없음
+#데이터베이스에서 뷰의 정의만 제거
+#삭제된 뷰를 기반으로 하는 뷰가 다른 으용 프로그램은 사용불가
+
+
+13-4시퀀스의 개념과 사용
+
+시퀀스의 개념
+#고유의 정수를 생성하기 위해 사용하는 데이터베이스 객체
+#가본키 값 생성에 소요되는 시간이 줄어드는 장점 제공
+#테이블과 별도로 저장 및 생성
+
+
+
+-시퀀스의 생성-
+CREATE SEQUNCE문을 사용하여 생성
+
+
+-시퀀스의 사용-
+#생성된 시퀀스는 데이터 딕셔너리에 기록
+#USER_SEQUENCES 데이터 딕셔너리 뷰에서 시퀀스 설정 확인
+#사용자는 NEXTVAL 및 CURRVAL 의사 열을 사용하여 시퀀스 값을 사용하거나 참조 할 수 있음
+
+
+-시퀀스의 공유-
+#서로 다른 여러 테이블에서 동일한 시퀀스 사용 가능
+#개별 테이블 내에서는 시퀀스 번호에 공백이 생기는 원인
+#테이블의 일련번호가 필요한 열마다 시퀀스를 별도로 생성하기를 권장
+
+
+-시퀀스 사용의 고려사항-
+다음과 같은 경우에 NEXXTVAL 및 CURRVAL을 사용할 수 있다
+
+#서브 쿼리에 속하지 않은 SELECT문의 SELECT목록
+#INSERT뮨에 포함되는 서브쿼리의 SELECT 목록
+#INSERT 문의 VALUES절
+#UPDATE 문의 SET절
+
+다음과 같은 경우에는 NEXTVAL 및 CURRVAL을 사용할 수 없으므로 SQL 문장 작성 시 참조한다.
+#뷰를 정의하는 SELECT 절의 목록
+#DISTINCT 키워드가 있는 SELECT 문
+#GROUP BY, HAVING 또는 ORDER BY 절이 있는 SELECT 문
+#SELECT, DELETE, UPDATE 문의 서브 쿼리
+#TABLE의 DEFAULT 값
+
+
+
+-시퀀스에 공백(Gap)이 생기는 경우-
+#CACHE 속성이 있는 시퀀스를 사용할 시 데이터베이스 시스템 장애 발생
+#시퀀스를 포함하는 명령문을 ROLLBACK
+#동일한 시퀀스를 여러 테이블에서 사용
+
+
+13-5 시퀀스의 관리
+
+-시퀀스의 수정-
+#ALTER SEQUENCE 명령문을 사용
+#START WITH 옵션을 제외한 시퀀스 생성 시 지정한 옵션 모두 수정
+#시퀀스이 충분 값 최대값 최소값 CYCLE옵션 또는 CACHE옵션 변경
+#시퀀스의 수정에 대한 검증 수행
+
+
+-시퀀스의 삭제-
+#DROP SEQUENCE문을 사용
+#데이터 딕셔너리에서 시퀀스를 삭제
+#제거된 시퀀스는 더 이상 참조할 수 없으므로 시퀀스를 참조하던 응용프로그램의 수정 필요
+
+
+예제
+
+
+-- Y_EMP 테이블에서 DEPT_ID가 300인 사원들에 대한 정보를 저장하는 DEPT300_VU 이라는 이름의 단순 뷰를 생성한다.
+CREATE OR REPLACE VIEW dept300_vu
+AS
+SELECT emp_id, emp_name, position, mgr_id, dept_id
+FROM y_emp
+WHERE dept_id = 300;
+--DEPT300_VU 뷰의 구조를 표시한다.
+DESC dept300_vu
+
+--부서 200의 모든 사원에 대해 별칭이 ID 사원 번호(EMP_ID), 별칭이 NAME인 이름(EMP_NAME), 별칭이 ANN_SAL인 연봉(SALARY*12)을 포함하는 뷰를 생성한다.
+CREATE OR REPLACE VIEW sal_vu200
+AS
+SELECT emp_id id, emp_name name, salary*12 ann_sal
+FROM y_emp
+WHERE dept_id = 200;
+--SAL_VU200 뷰를 다음과 같이 작성할 수도 있다.
+CREATE OR REPLACE VIEW sal_vu200 (id, name, ann_sal)
+AS
+SELECT emp_id , emp_name, salary*12 
+FROM y_emp
+WHERE dept_id = 200;
+
+
+--DEPT300_VU와 SAL_VU200 뷰를 조회하여 데이터를 확인한다.
+SELECT * FROM dept300_vu;
+SELECT * FROM sal_vu200;
+--뷰를 정의하여 데이터 액세스를 제한하는 것과 테이블의 사본을 정의하여 데이터 액세스하는 것의 차이점을 알아보기 위해 SAL_VU200 뷰와 동일한 서브쿼리로 SAL200이라는 이름의 테이블을 생성한다.
+CREATE TABLE sal200
+AS
+SELECT emp_id id, emp_name, salary*12 ann_sal
+FROM y_emp
+WHERE dept_id = 200;
+DESC sal200
+SELECT * FROM sal200;
+
+--기본 테이블인 Y_EMP 테이블에서 200번 부서 사원들의 급여에 대한 UPDATE를 수행한다.
+UPDATE y_emp
+SET salary = salary+200
+WHERE dept_id = 200;
+COMMIT;
+--SAL200 테이블과 SAL_VU200 뷰를 검색하여 ANN_SAL 열의 값이 UPDATE의 결과를 반영하는지 여부를 확인한다.
+SELECT * FROM sal200;
+SELECT * FROM sal_vu200;
+
+--DEPT300_VU 뷰를 이용하여 새 행을 INSERT 하고 기본 테이블을 확인한다. 
+INSERT INTO dept300_vu
+VALUES(2020,'이병헌','과장', 1001, 500);
+COMMIT;
+SELECT emp_id, emp_name, position, salary, mgr_id, dept_id
+FROM y_emp
+WHERE emp_id = 2020;
+--뷰를 수정하기 위해 CREATE OR REPLACE 명령문을 사용하여 SAL_VU200 뷰에 DEPT_ID 열을 DEPTID 라는 이름의 별칭으로 추가하여 변경하고 확인한다.
+CREATE OR REPLACE VIEW sal_vu200
+AS
+SELECT emp_id id, emp_name, salary*12 ann_sal, dept_id deptid
+FROM y_emp
+WHERE dept_id = 200;
+DESC sal_vu200
+SELECT * FROM sal_vu200;
+
+--다음은 부서 이름 별 총 급여 및 평균급여를 표시하는 복합 뷰이다. 예제와 같이 뷰의 열이 함수나 표현식으로부터 파생된 경우에는 반드시 별칭이 필요하다.
+CREATE VIEW dname_tot_vu(name, avgsal, sumsal)
+AS 
+SELECT  d.dept_name, AVG(e.salary), SUM(e.salary)
+FROM y_emp e JOIN  y_dept d
+ON (e.dept_id = d.dept_id)
+GROUP BY  d.dept_name ;
+DESC dname_tot_vu
+
+--INSERT 또는 UPDATE 되는 데이터에 대해 무결성 제약 조건을 적용하고 데이터의 유효성을 검사하기 위해 DEPT300_VU 에 WITH CHECK OPTION을 추가하여 뷰를 재작성 한다.
+CREATE OR REPLACE VIEW dept300_vu
+AS
+SELECT emp_id, emp_name, position, mgr_id, dept_id
+FROM y_emp
+WHERE dept_id = 300
+WITH CHECK OPTION;
+
+--DEPT300_VU 뷰를 통해 부서 번호 변경을 시도하면 WITH CHECK OPTION 제약 조건에 위배된다. 뷰가 선택하지 않은 행에 대해 DML 작업을 시도하면 다음 오류가 표시된다.
+UPDATE dept300_vu
+SET dept_id = 500
+WHERE emp_id = 1044;
+        
+--DML 작업이 수행되지 않도록 DEPT300_VU 뷰를 읽기 전용 뷰로 다시 정의한다.
+CREATE OR REPLACE VIEW dept300_vu
+AS
+SELECT emp_id, emp_name, position, mgr_id, dept_id
+FROM y_emp
+WHERE dept_id = 300
+WITH READ ONLY;
+--읽기 전용 뷰에 DML을 시도하면 다음과 같이 오류가 표시된다.
+UPDATE dept300_vu
+SET mgr_id =1035
+WHERE emp_id = 1044;
+
+
+--USER_VIEWS를 쿼리하여 DEPT300_VU와 SAL_VU200 뷰에 대한 정보를 본다. 
+SELECT view_name, text
+FROM user_views;
+--SAL_VU200 뷰를 데이터베이스로부터 제거한 후 USER_VIEWS를 다시 쿼리하여 확인한다.
+DROP VIEW sal_vu200 ;
+SELECT view_name, text
+FROM user_views;
+
+
+--Y_DEPT 테이블의 DEPT_ID 열에 사용할 목적으로 DEPT_DEPTID_SEQ라는 이름의 시퀀스를 생성한다. 이 시퀀스는 1000번으로 시작하며 100씩 증가하며 최대 9900번까지 저장할 수 있다. 또한 캐시를 허용하지 않고 순환하지 않는다. 
+CREATE SEQUENCE dept_deptid_seq
+INCREMENT BY 100
+START WITH 1000
+MAXVALUE 9900
+NOCACHE
+NOCYCLE ;
+
+
+--USER_SEQUENCES를 조회하여 DEPT_DEPTID_SEQ 시퀀스 설정을 확인한다.
+SELECT sequence_name,increment_by, last_number
+FROM user_sequences
+WHERE sequence_name = 'DEPT_DEPTID_SEQ';
+--DEPT_DEPTID_SEQ 시퀀스를 사용하여 Y_DEPT 테이블에 새 행을 입력한다.
+INSERT INTO y_dept(dept_id, dept_name)
+VALUES(dept_deptid_seq.NEXTVAL, 'AS');
+COMMIT;
+SELECT * FROM y_dept;
+--DUAL 테이블을 사용하여 sequence.CURRVAL을 참조하면 마지막으로 사용한 값이 표시된다.
+SELECT dept_deptid_seq.CURRVAL FROM dual;
+
+
+--DEPT_DEPTID_SEQ 시퀀스를 사용하여 Y_EMP 테이블에 새 행을 입력한다.
+INSERT INTO y_emp (emp_id, emp_name)
+VALUES(dept_deptid_seq.NEXTVAL, '노영준');
+COMMIT;
+--Y_EMP 테이블의 노영준 사원의 사원번호를 확인한다.
+--부서테이블에서 다시 DEPT_DEPTID_SEQ 시퀀스를 사용하게 되면 번호가 건너뛰게 된다.
+SELECT emp_id, emp_name FROM y_emp
+WHERE emp_name='노영준';
+
+
+--DEPT_DEPTID_SEQ 시퀀스의 증분 값을 10으로, MAXVALUE를 20000으로 수정한다.
+ALTER SEQUENCE dept_deptid_seq
+INCREMENT BY 10
+MAXVALUE 20000;
+--DEPT_DEPTID_SEQ 시퀀스를 삭제한다.
+DROP SEQUENCE dept_deptid_seq;
+
+
+
+
+
+
+
+
+
+
