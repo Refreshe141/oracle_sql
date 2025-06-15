@@ -1,0 +1,164 @@
+12-1 인덱스의 개념
+
+
+-데이터베이스 시스템의 성능-
+#테이블 데이터를 접근하는 방식
+index scan
+물리적 데이터베이스 설계 과정에서 SQL 명령문의 처리 속도 최적화를 위해 생성
+Full Table Scan
+#열에 인덱스가 없는 경우 오라클 서버가 전체 테이블을 검색하는 방법
+
+
+-인덱스-
+#스키마 객ㅊ체중의 하나
+#검색 시조건으로 사용되는 열에생성**
+#데이터베이스 시스템의 디스크 I/O 최적화
+
+
+12-2 인덱스의 정의
+#단일 열 또는 조합 열에 정의
+
+#인덱스 생성
+명령문을 이용해 사용자가 수동으로 생성
+오라클 서버에 의해 자동으로 생성
+
+#테이블을 삭제하면 테이블과 연관된 인덱스들을 함께 삭제
+
+
+-자동으로 생성되는 인덱스-
+#테이블에 PRIMARY KEY 또는 UNIQUE 제약 조건을 정의하면 고유(UNIQUE) 인덱스 자동으로 생성
+#제약조건 이름과 동일한 이름으로 생성
+#사용자 수동 삭제 불가
+
+
+-수동 인덱스의 생성-
+#응프로그램의 요구사항에 따라 하나의 열에 인덱스 여러  번 정의 가능**
+#사용자는 CREATE INDEX문을 실행하여 인덱스 생성
+#고유 인덱스 비고유 인덱스 모두 가능
+
+
+-인덱스 유형-
+#고유 인덱스
+#비 고유 인덱스
+#결합 인덱스
+#함수 기반 인덱스
+
+
+
+-함수기반 인덱스-
+#인덱스화 된 열에 함수나 표현식을 사용해서 검색하면 전체 테이블 스캔 발생
+#검색 속도 향상
+
+
+-인덱스 삭제-
+#DROP INDEX 명령문 실행
+#테이블을 삭제하거나 인덱스화된 열을 테이블로부터 삭제하는 경우
+#제약 조건에 의해 자동으로 생성된 인덱스는 제약 조건을 삭제하거나 비활성화 하면 자동으로 제거
+
+
+
+12-3 인덱스의 사용
+
+
+-인덱스의 사용-
+#인덱스를 오라클 서버에 의해 사용되며 자동으로 유지 관리됨
+#테이블과 연관된 인덱스가 많을수록 서버의 DML 성능 저하 가능성 존재
+
+
+-인덱스 생성의 권장-
+#열에 광법위한 값이 포함된 경우
+#열에 NULL 값이 많이 포함된 경우
+
+-비권장-
+#테이블이 작은 경우
+#열이 쿼리의 조건으로 자주 사용되지 않는 경우
+
+
+12-4 인덱스 정보
+
+-인덱스 정보 보기-
+USER_INDEXES 데이터 딕셔너리
+#인덱스의 이름과 고유성 관련테이블 등을 확인
+#인덱스가 생성된 열의 이름을 확인 불가
+
+USER_IND_COLUMNS 데이터 딕셔너리
+#인덱스와 관련된 열 확인
+
+
+
+예제
+
+--Y_EMP, Y_DEPT 테이블에 정의된 제약 조건은 다음과 같다.
+SELECT table_name, constraint_name, constraint_type
+FROM user_constraints
+WHERE table_name in ('Y_EMP','Y_DEPT');
+--Y_EMP, Y_DEPT 테이블에 연관된 인덱스의 목록을 조회해 보며 제약조건과 동일한 이름의 인덱스가 자동으로 생성되어 있는지 확인한다.
+SELECT table_name, index_name, uniqueness  FROM user_indexes
+WHERE table_name in ('Y_EMP','Y_DEPT');
+
+
+--실습환경 조성을 위해 Y_EMP 테이블과 Y_DEPT 테이블에 PRIMARY KEY가 정의되어  있다면 삭제 후 다시 생성한다. 
+--그리고 Y_EMP 테이블의 DEPT_ID 열에 Y_DEPT 테이블의 PRIMARY KEY를 참조하는 FOREIGN KEY도 다시 정의해 준다.
+ALTER TABLE y_emp DROP PRIMARY KEY CASCADE;  
+ALTER TABLE y_dept DROP PRIMARY KEY CASCADE;
+ALTER TABLE y_emp
+ADD CONSTRAINT emp_empid_pk PRIMARY KEY(emp_id);  
+ALTER TABLE y_dept
+ADD CONSTRAINTS dept_deptid_pk PRIMARY KEY(dept_id);
+ALTER TABLE y_emp
+ADD CONSTRAINT emp_deptid_fk FOREIGN KEY(dept_id) REFERENCES y_dept(dept_id);
+
+
+--데이터 딕셔너리 USER_INDEXES를 조회하여 특정 테이블과 연관된 인덱스에 대한 정보를 조회할 수 있다.
+SELECT table_name, index_name, uniqueness  FROM user_indexes
+WHERE table_name in ('Y_EMP','Y_DEPT');
+--Y_EMP 테이블의 PRIMARY KEY를 DISABLE 하고 인덱스를 조회해 본다.
+ALTER TABLE y_emp DISABLE PRIMARY KEY CASCADE;
+SELECT table_name, index_name, uniqueness  
+FROM user_indexes
+WHERE table_name = 'Y_EMP';
+--Y_EMP 테이블의 PRIMARY KEY를 ENABLE 하고 인덱스를 조회해 본다. 
+ALTER TABLE y_emp ENABLE PRIMARY KEY;
+SELECT table_name, index_name, uniqueness  FROM user_indexes
+WHERE table_name = 'Y_EMP';
+
+
+--FOREIGN KEY가 정의된 Y_EMP 테이블 DEPT_ID열에 비고유 인덱스를 생성하기 위해 다음 명령문을 실행한다.
+CREATE INDEX emp_deptid_idx ON y_emp(dept_id);
+--ON절의 괄호 안에 COLUMN 이름을 여러 개 지정하면 조합 열에 대한 단일 인덱스가 생성된다. 
+--사원을 검색할 때 EMP_ID와 EMP_NAME을 조건으로 자주 사용한다면 두 열을 결합하여 결합 인덱스를 생성한다.
+CREATE INDEX emp_empid_ename_idx ON y_emp(emp_id, emp_name);
+--이미 결합 인덱스가 존재하는 Y_EMP 테이블의 EMP_NAME 열에 단일 인덱스를 중복적으로 생성한다.
+CREATE INDEX emp_ename_idx ON y_emp(emp_name);
+
+
+--EMP_NAME 열에 일반 인덱스를 생성한 경우 다음 두 명령문은 동일한 결과를 반환하지만 첫 번째 명령문은 인덱스를 사용하지 않고 두 번째 명령문은 인덱스를 사용한다.
+SELECT emp_id, emp_name, salary, position  FROM y_emp
+WHERE LOWER(emp_name) = 'mark kim';
+SELECT emp_id, emp_name, salary, position
+FROM y_emp
+WHERE emp_name = INITCAP('mark kim');
+--급여를 조회할 때 사용할 표현식 SALARY*12*0.9에 대한 함수 기반 인덱스를 생성해 본다. 
+CREATE INDEX emp_sal_fidx ON y_emp(salary*12*0.9);
+--EMP_SAL_FIDX 인덱스는 다음과 같은 쿼리에 대해 사용되어 SQL 명령문 처리 성능을 개선될 것이다.
+SELECT emp_id, emp_name, position  FROM y_emp
+WHERE salary*12*0.9 > 10000;
+
+--EMP_SAL_FIDX 인덱스를 제거한다.
+DROP INDEX emp_sal_fidx;
+--제약 조건에 의해 자동으로 만들어진 인덱스를 수동으로 제거하려고 하면 다음과 같은 오류를 반환한다.
+DROP INDEX emp_email_uk;  
+
+--다음은 USER_INDEXES와 USER_IND_COLUMNS를 조인하여 Y_EMP 테이블에서 생성된 모든 인덱스 이름, 관련된 열 이름 및 인덱스의 고유성을 조회하는 명령문이다.
+SELECT ic.index_name, ic.column_name, uniqueness  
+FROM user_indexes ix, user_ind_columns ic
+WHERE ic.index_name = ix.index_name  AND ic.table_name = 'Y_EMP';
+
+
+
+
+
+
+
+
+
